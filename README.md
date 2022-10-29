@@ -1,4 +1,4 @@
-# <font color = 'navy'> Laboratorio 4. Microesturctura de Mercado <font color = 'black'>
+# <font color = 'navy'> Laboratorio 4. Microestructura de Mercado <font color = 'black'>
     
 El objetivo de este repositorio es mostrar el desarrollo organizado del cuarto laboratorio de la materia de *microestructuras y sistemas de trading*.
     
