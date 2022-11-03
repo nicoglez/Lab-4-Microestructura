@@ -13,5 +13,5 @@ coins = ['BTC/USDT', 'BTC/EUR', "ETH/USDT"]
 #ccxt_getter(markets=markets, coins=coins, minutes_fetch=60, filepath="files/data_Lab_4.xlsx")
 
 # Leer xlsx generado
-data = pd.read_excel("files/data_Lab_4.xlsx", engine='openpyxl')
+data = pd.read_excel("files/data_Lab_4.xlsx", engine='openpyxl').sort_values(by="exchange")
 data_dict = pd_to_dict(data)
