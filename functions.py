@@ -15,13 +15,12 @@ def ccxt_getter(markets: dict, coins: list, minutes_fetch: int, filepath=str):
         data = pd.DataFrame(index=["exchange", "coin", "timeStamp", "level", "ask", "ask_volume", "bid", "bid_volume",
                                    "spread", "total_volume", "mid_price", "open_price", "high_price", "low_price",
                                    "close_price", "vwap"])
-        # Iterar por cada moneda
-        for coin in coins:
-            # Iterar por cada mercado
-            for market in markets.keys():
-
-                # Intentar bajar la informacion de la API, a veces falla
-                try:
+        try:
+            # Iterar por cada moneda
+            for coin in coins:
+                # Iterar por cada mercado
+                for market in markets.keys():
+                    # Intentar bajar la informacion de la API, a veces falla
                     ID += 1
                     # Obtener metodo de libreria segun el x mercado
                     method = markets.get(market)
@@ -51,29 +50,14 @@ def ccxt_getter(markets: dict, coins: list, minutes_fetch: int, filepath=str):
                     close_price = method.fetch_ohlcv(coin, "1m", limit=1)[-1][4]
                     vwap = ask * (ask_volume / total_volume) + bid * (bid_volume / total_volume)
 
-                # En caso de que falle la API, asumiremos que la data no ha cambiado, agarrando el dato mas reciente de la
-                # misma moneda para el caso anterior en el mismo mercado
-                except:
-                    case = data_f.iloc[:, len(data_f.T) - len(markets) * len(coins)]
-                    exchange = market
-                    coin = case.coin
-                    time_stamp = datetime.datetime.now().strftime("%m/%d/%Y, %H:%M:%S")
-                    level = case.level
-                    ask = case.ask
-                    ask_volume = case.ask_volume
-                    bid = case.bid
-                    bid_volume = case.bid_volume
-                    spread = case.spread
-                    total_volume = case.total_volume
-                    mid_price = case.mid_price
-                    open_price = case.open_price
-                    high_price = case.high_price
-                    low_price = case.low_price
-                    close_price = case.close_price
-                    vwap = case.vwap
-                # Llenar data
-                data[ID] = [exchange, coin, time_stamp, level, ask, ask_volume, bid, bid_volume, spread,
-                            total_volume, mid_price, open_price, high_price, low_price, close_price, vwap]
+                    # Llenar data
+                    data[ID] = [exchange, coin, time_stamp, level, ask, ask_volume, bid, bid_volume, spread,
+                                total_volume, mid_price, open_price, high_price, low_price, close_price, vwap]
+
+        # En caso de que falle la API, asumiremos que no hay
+        except:
+            pass
+
         # Regresar data
         return data
 
@@ -83,16 +67,20 @@ def ccxt_getter(markets: dict, coins: list, minutes_fetch: int, filepath=str):
                                "close_price", "vwap"])
 
     # For que llama n observaciones la funcion anterior
-    for i in range(minutes_fetch):
-        # Appendear data n veces
-        data = data.T.append(itter_tool(markets, coins, data).T).T
-        # Esperar proceso 60 segundos
-        sleep(60)
+    time = datetime.datetime.now()
+    time_f = 0
+    # Mientras tiempo sea menos a los minutos por bajar
+    while time_f < minutes_fetch * 60:
+        # Appendear data n veces si hay datos
+        itter = itter_tool(markets, coins, data)
+        if itter is not None:
+            data = data.T.append(itter.T).T
+            # Diferencia de tiempos
+        time_f = (datetime.datetime.now() - time).seconds
 
     # Sobre escribir en xlsx
     data.T.set_index("timeStamp").to_excel(filepath)
     print("Archivo", filepath, "importado correctamente a Excel")
-    # return data.T.set_index(np.arange(0, len(data.T)))
 
 
 # Funcion para convertir Data Frame a Diccionario
