@@ -10,7 +10,7 @@ markets = {"kraken": ccxt.kraken(), "currencycom": ccxt.currencycom(), "binance"
 coins = ['BTC/USDT', 'BTC/EUR', "ETH/USDT"]
 
 # Descargar la base de datos en un xlsx, si se quiere testear la funcion se puede correr menos veces minutes_fetch
-#ccxt_getter(markets=markets, coins=coins, minutes_fetch=60, filepath="files/data_Lab_4.xlsx")
+#ccxt_getter(markets=markets, coins=coins, minutes_fetch=120, filepath="files/data.xlsx")
 
 # Leer xlsx generado
 data = pd.read_excel("files/data_Lab_4.xlsx", engine='openpyxl').sort_values(by="timeStamp")
