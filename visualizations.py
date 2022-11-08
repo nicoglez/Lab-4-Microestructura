@@ -1,5 +1,6 @@
 import pandas as pd
 import numpy as np
+import warnings
 import plotly.express as px
 from plotly import graph_objects as go
 from plotly.subplots import make_subplots
@@ -230,4 +231,108 @@ def levels_markets(coin: str, data: pd.DataFrame):
     fig.update_layout(title_text=f"Levels {coin}")
     fig.update_yaxes(title_text="Price", row=1, col=1)
     fig.update_xaxes(title_text="Volume")
+    fig.show()
+
+
+# Funcion para graficar roll spread
+def roll_spread_plot(roll_data: pd.DataFrame):
+    # Ignorar errores de deprecation
+    import warnings
+    warnings.filterwarnings("ignore", category=DeprecationWarning)
+
+    # Obtener set de mercado
+    market = ["binance", "currencycom", "kraken"]
+    coin = ['BTC/USDT', 'BTC/EUR', "ETH/USDT"]
+
+    # Obtener dia de operacion
+    day = roll_data.iloc[0, 0][0:10]
+    # Hacer temp con informacion de cada mercado y su fecha
+    roll_data["timeStamp"] = [i[12:] for i in roll_data["timeStamp"]]
+
+    # Inicializar figura
+    fig = make_subplots(rows=1, cols=3,
+                        shared_yaxes=True,
+                        subplot_titles=(f"{coin[0]}",
+                                        f"{coin[1]}",
+                                        f"{coin[2]}"))
+
+    # Figura 1
+    fig.add_trace(go.Line(  # Usaremos un promedio movil con ventana de 20 dias debido a que si no parece ruido blanco
+        y=roll_data[(roll_data["exchange"] == market[0]) & (roll_data["coin"] == coin[0])]["effective spread"].rolling(
+            20).mean().dropna(),
+        x=roll_data[(roll_data["exchange"] == market[1]) & (roll_data["coin"] == coin[0])]["timeStamp"],
+        marker_color="black",
+        name=f"effective spread {market[0]}"),
+        row=1, col=1)
+
+    fig.add_trace(go.Line(  # Usaremos un promedio movil con ventana de 20 dias debido a que si no parece ruido blanco
+        y=roll_data[(roll_data["exchange"] == market[1]) & (roll_data["coin"] == coin[0])]["effective spread"].rolling(
+            20).mean().dropna(),
+        x=roll_data[(roll_data["exchange"] == market[1]) & (roll_data["coin"] == coin[0])]["timeStamp"],
+        marker_color="red",
+        name=f"effective spread {market[1]}"),
+        row=1, col=1)
+
+    fig.add_trace(go.Line(  # Usaremos un promedio movil con ventana de 20 dias debido a que si no parece ruido blanco
+        y=roll_data[(roll_data["exchange"] == market[2]) & (roll_data["coin"] == coin[0])]["effective spread"].rolling(
+            20).mean().dropna(),
+        x=roll_data[(roll_data["exchange"] == market[1]) & (roll_data["coin"] == coin[0])]["timeStamp"],
+        marker_color="blue",
+        name=f"effective spread {market[2]}"),
+        row=1, col=1)
+
+    # Figura 2
+    fig.add_trace(go.Line(  # Usaremos un promedio movil con ventana de 20 dias debido a que si no parece ruido blanco
+        y=roll_data[(roll_data["exchange"] == market[0]) & (roll_data["coin"] == coin[1])]["effective spread"].rolling(
+            20).mean().dropna(),
+        x=roll_data[(roll_data["exchange"] == market[1]) & (roll_data["coin"] == coin[1])]["timeStamp"],
+        marker_color="black",
+        showlegend=False),
+        row=1, col=2)
+
+    fig.add_trace(go.Line(  # Usaremos un promedio movil con ventana de 20 dias debido a que si no parece ruido blanco
+        y=roll_data[(roll_data["exchange"] == market[1]) & (roll_data["coin"] == coin[1])]["effective spread"].rolling(
+            20).mean().dropna(),
+        x=roll_data[(roll_data["exchange"] == market[1]) & (roll_data["coin"] == coin[1])]["timeStamp"],
+        marker_color="red",
+        showlegend=False),
+        row=1, col=2)
+
+    fig.add_trace(go.Line(  # Usaremos un promedio movil con ventana de 20 dias debido a que si no parece ruido blanco
+        y=roll_data[(roll_data["exchange"] == market[2]) & (roll_data["coin"] == coin[1])]["effective spread"].rolling(
+            20).mean().dropna(),
+        x=roll_data[(roll_data["exchange"] == market[1]) & (roll_data["coin"] == coin[1])]["timeStamp"],
+        marker_color="blue",
+        showlegend=False),
+        row=1, col=2)
+
+    # Figura 3
+    fig.add_trace(go.Line(  # Usaremos un promedio movil con ventana de 20 dias debido a que si no parece ruido blanco
+        y=roll_data[(roll_data["exchange"] == market[0]) & (roll_data["coin"] == coin[2])]["effective spread"].rolling(
+            20).mean().dropna(),
+        x=roll_data[(roll_data["exchange"] == market[1]) & (roll_data["coin"] == coin[2])]["timeStamp"],
+        marker_color="black",
+        showlegend=False),
+        row=1, col=3)
+
+    fig.add_trace(go.Line(  # Usaremos un promedio movil con ventana de 20 dias debido a que si no parece ruido blanco
+        y=roll_data[(roll_data["exchange"] == market[1]) & (roll_data["coin"] == coin[2])]["effective spread"].rolling(
+            20).mean().dropna(),
+        x=roll_data[(roll_data["exchange"] == market[1]) & (roll_data["coin"] == coin[2])]["timeStamp"],
+        marker_color="red",
+        showlegend=False),
+        row=1, col=3)
+
+    fig.add_trace(go.Line(  # Usaremos un promedio movil con ventana de 20 dias debido a que si no parece ruido blanco
+        y=roll_data[(roll_data["exchange"] == market[2]) & (roll_data["coin"] == coin[2])]["effective spread"].rolling(
+            20).mean().dropna(),
+        x=roll_data[(roll_data["exchange"] == market[1]) & (roll_data["coin"] == coin[2])]["timeStamp"],
+        marker_color="blue",
+        showlegend=False),
+        row=1, col=3)
+
+    # Mostrar figura
+    fig.update_layout(title_text="Effective Spread - Roll Model")
+    fig.update_yaxes(title_text="Effective Spread", row=1, col=1)
+    fig.update_xaxes(title_text=f"Time Stamp ({day})")
     fig.show()
