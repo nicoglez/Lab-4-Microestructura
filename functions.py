@@ -125,3 +125,45 @@ def pd_to_dict(data: pd.DataFrame) -> dict:
     # Regresar diccionario
     return final
 
+# Funcion para calcular el effective spread con el roll model
+def roll_model(data: pd.DataFrame, rezagos: int):
+    # Quitar warnings de mas de pandas
+    pd.options.mode.chained_assignment = None
+    # Filtrar las variables que necesitamos
+    data = data[["timeStamp", "exchange", "coin", "spread", "close_price"]]
+    # Set de mercados y monedas
+    markets = {"kraken": ccxt.kraken(), "currencycom": ccxt.currencycom(), "binance": ccxt.binance()}
+    coins = ['BTC/USDT', 'BTC/EUR', "ETH/USDT"]
+    # Crear variable temporal que iremos llenando
+    temp_f = pd.DataFrame(columns=["timeStamp", "exchange", "coin", "spread", "close_price", "effective spread"])
+
+    # hacer for para encontrar para n mercados en n monedas
+    for market in markets.keys():
+        for coin in coins:
+            # Filtrar por los n exchanges y n bitcoins
+            temp = data[(data["exchange"] == market) & (data["coin"] == coin)]
+
+            # Rezagar serie TEMPORAL 5 veces
+            for rezago in range(rezagos):
+                temp[f"close t-{rezago + 1}"] = temp.iloc[:, -1].shift()
+
+            # Quitar valores nulos
+            temp.dropna(inplace=True)
+
+            # Obtener deltas del tiempo
+            for rezago in range(5):
+                if rezago == 0:
+                    temp[f"Delta{rezago}"] = temp["close_price"] - temp["close t-1"]
+                else:
+                    temp[f"Delta{rezago}"] = temp[f"close t-{rezago}"] - temp[f"close t-{rezago + 1}"]
+
+            # Encontrar el effective spread en t+1
+            temp["effective spread"] = [round(i, 2) for i in 2 * np.sqrt(abs(np.cov(temp.iloc[:, 10:])[1]))]
+
+            # Filtrar columnas que necesitamos
+            temp = temp[["timeStamp", "exchange", "coin", "spread", "close_price", "effective spread"]]
+
+            # Appendear con df final
+            temp_f = temp_f.T.join(temp.T).T
+
+    return temp_f
